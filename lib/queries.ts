@@ -18,6 +18,21 @@ export interface GlobalSettings {
   };
 }
 
+/** Single slideshow item from homepage (title + image only) */
+export interface HomepageSlideshowItem {
+  title?: string;
+  image?: {
+    asset?: { _ref: string; _type: "reference" };
+    alt?: string;
+  };
+}
+
+/** Homepage document: slideshow items only */
+export interface Homepage {
+  _id: string;
+  items?: HomepageSlideshowItem[];
+}
+
 export interface Page {
   _id: string;
   title?: string;
@@ -45,6 +60,20 @@ export interface Post {
   publishedAt?: string;
 }
 
+/** Project document for the projects page grid */
+export interface Project {
+  _id: string;
+  /** Title as portable text (blocks) or legacy string */
+  title?: PortableTextBlock[] | string;
+  slug?: { current: string };
+  order?: number;
+  slideshowImages?: Array<{
+    asset?: { _ref: string; _type?: string };
+    alt?: string;
+    startVisible?: boolean;
+  }>;
+}
+
 /**
  * Sanity Data Queries
  * 
@@ -67,12 +96,80 @@ export async function getGlobalSettings(): Promise<GlobalSettings | null> {
 }
 
 /**
- * Fetch a page by slug
- * Works with "homepage", "page", or any document type with a slug field
+ * Fetch homepage (slideshow items only)
+ * Create a single "Homepage" document in Sanity Studio
+ */
+export async function getHomepage(): Promise<Homepage | null> {
+  try {
+    const query = `*[_type == "homepage"][0]{
+      _id,
+      items[]{
+        title,
+        image{
+          asset,
+          alt
+        }
+      }
+    }`;
+    return await sanityClient.fetch<Homepage | null>(query);
+  } catch (error) {
+    console.error("Error fetching homepage:", error);
+    return null;
+  }
+}
+
+/**
+ * Fetch all projects ordered by the order field (ascending)
+ */
+export async function getProjects(): Promise<Project[]> {
+  try {
+    const query = `*[_type == "project"] | order(order asc) {
+      _id,
+      title,
+      slug,
+      order,
+      slideshowImages[]{
+        asset,
+        alt,
+        startVisible
+      }
+    }`;
+    return await sanityClient.fetch<Project[]>(query);
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetch a single project by slug
+ */
+export async function getProjectBySlug(slug: string): Promise<Project | null> {
+  try {
+    const query = `*[_type == "project" && slug.current == $slug][0]{
+      _id,
+      title,
+      slug,
+      order,
+      slideshowImages[]{
+        asset,
+        alt,
+        startVisible
+      }
+    }`;
+    return await sanityClient.fetch<Project | null>(query, { slug });
+  } catch (error) {
+    console.error(`Error fetching project with slug "${slug}":`, error);
+    return null;
+  }
+}
+
+/**
+ * Fetch a page by slug (static pages only; homepage uses getHomepage)
  */
 export async function getPageBySlug(slug: string): Promise<Page | null> {
   try {
-    const query = `*[_type in ["homepage", "page"] && slug.current == $slug][0]{
+    const query = `*[_type == "page" && slug.current == $slug][0]{
       _id,
       title,
       slug,

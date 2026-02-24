@@ -6,6 +6,7 @@ import page from "./schemaTypes/page";
 import globalSettings from "./schemaTypes/globalSettings";
 import imageWithAlt from "./schemaTypes/imageWithAlt";
 import navigation from "./schemaTypes/navigation";
+import project from "./schemaTypes/project";
 
 /**
  * Sanity Studio Configuration
@@ -35,6 +36,7 @@ export default defineConfig({
       globalSettings,
       imageWithAlt,
       navigation,
+      project,
     ],
   },
 });

@@ -6,87 +6,56 @@ export default defineType({
   type: "document",
   fields: [
     defineField({
-      name: "title",
-      title: "Title",
-      type: "string",
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: "slug",
-      title: "Slug",
-      type: "slug",
-      options: {
-        source: "title",
-        maxLength: 96,
-      },
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: "description",
-      title: "Description",
-      type: "text",
-    }),
-    defineField({
-      name: "content",
-      title: "Content",
+      name: "items",
+      title: "Slideshow items",
       type: "array",
+      description: "Images for the homepage slideshow. Each item has a title and image.",
       of: [
         {
-          type: "block",
-          marks: {
-            decorators: [
-              { title: "Strong", value: "strong" },
-              { title: "Emphasis", value: "em" },
-              { title: "Code", value: "code" },
-              { title: "Underline", value: "underline" },
-              { title: "Strike", value: "strike" },
-            ],
-            annotations: [
-              {
-                title: "Link",
-                name: "link",
-                type: "object",
-                fields: [
-                  {
-                    title: "URL",
-                    name: "href",
-                    type: "url",
-                    validation: (Rule: any) =>
-                      Rule.uri({
-                        allowRelative: true,
-                        scheme: ["http", "https", "mailto", "tel"],
-                      }),
-                  },
-                  {
-                    title: "Open in new tab",
-                    name: "blank",
-                    type: "boolean",
-                    description: "Check this to make the link open in a new browser tab",
-                    initialValue: false,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-        {
-          type: "image",
+          type: "object",
+          name: "slideshowItem",
+          title: "Slideshow item",
           fields: [
             {
-              name: "alt",
-              title: "Alt Text",
+              name: "title",
+              title: "Title",
               type: "string",
-              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: "image",
+              title: "Image",
+              type: "image",
+              options: { hotspot: true },
+              fields: [
+                {
+                  name: "alt",
+                  title: "Alt Text",
+                  type: "string",
+                  description: "Important for accessibility and SEO.",
+                },
+              ],
             },
           ],
+          preview: {
+            select: { title: "title", media: "image" },
+            prepare({ title, media }) {
+              return { title: title || "Slide", media };
+            },
+          },
         },
       ],
     }),
   ],
   preview: {
     select: {
-      title: "title",
+      firstTitle: "items.0.title",
+      firstMedia: "items.0.image",
+    },
+    prepare({ firstTitle, firstMedia }) {
+      return {
+        title: firstTitle || "Homepage",
+        media: firstMedia,
+      };
     },
   },
 });
-

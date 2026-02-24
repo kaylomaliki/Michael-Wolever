@@ -1,44 +1,23 @@
-import { getGlobalSettings, getPageBySlug } from "@/lib/queries";
-import PortableText from "@/components/sanity/PortableText";
+import { getHomepage } from "@/lib/queries";
+import HomePageContent from "./HomePageContent";
 
 /**
  * Homepage
- * 
- * This page fetches content from Sanity CMS.
- * 
- * To customize:
- * 1. Create a "homepage" document in Sanity Studio with slug "home"
- * 2. Or modify this component to fetch different content
- * 
- * ISR (Incremental Static Regeneration):
- * - Revalidates every 60 seconds
- * - Pages are statically generated at build time
- * - Updates automatically when content changes in Sanity
+ *
+ * Fetches the single "Homepage" document from Sanity (slideshow items only).
+ * Create a "Homepage" document in Sanity Studio and add slideshow items.
  */
 export const revalidate = 60;
 
 export default async function Home() {
-  const globalSettings = await getGlobalSettings();
-  const page = await getPageBySlug("home");
+  const homepage = await getHomepage();
+  const items = homepage?.items ?? [];
 
   return (
-    <main className="min-h-screen p-8">
-      <h1 className="text-4xl font-bold">
-        {page?.title || globalSettings?.siteTitle || "Welcome"}
-      </h1>
-      {page?.description && (
-        <p className="mt-4 text-lg text-gray-600">{page.description}</p>
-      )}
-      {globalSettings?.siteDescription && !page?.description && (
-        <p className="mt-4 text-lg text-gray-600">{globalSettings.siteDescription}</p>
-      )}
-      
-      {/* Render portable text content from Sanity */}
-      {page?.content && Array.isArray(page.content) && page.content.length > 0 && (
-        <div className="mt-8 prose prose-lg max-w-none">
-          <PortableText content={page.content} />
-        </div>
-      )}
+    <main className="relative flex min-h-screen items-center justify-center p-8">
+      {items.length > 0 ? (
+        <HomePageContent items={items} />
+      ) : null}
     </main>
   );
 }
