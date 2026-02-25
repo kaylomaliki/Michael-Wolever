@@ -9,7 +9,7 @@ export default function ProjectsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="relative min-h-screen w-full p-[20px]">
+    <main className="relative min-h-screen w-full p-[20px] pl-[50vw]">
       {children}
     </main>
   );

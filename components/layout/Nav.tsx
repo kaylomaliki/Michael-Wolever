@@ -93,7 +93,7 @@ export default function Nav({
       {isProjectsVariant ? (
         <>
           {/* Projects variant: Michael Wolever + Projects with X + Information on hover */}
-          <span className="bodycopy block w-full pl-[0px] pr-[40px] text-left align-top text-[var(--identity-color)]">
+          <span className="bodycopy block w-full pl-[0px] pr-[40px] text-left align-top !text-[var(--identity-color)]">
             Michael Wolever
           </span>
           <Link
@@ -115,7 +115,7 @@ export default function Nav({
       ) : isInformationVariant ? (
         <>
           {/* Information variant: Michael Wolever + Information with X + Projects on hover */}
-          <span className="bodycopy block w-full pl-[0px] pr-[40px] text-left align-top text-[var(--identity-color)]">
+          <span className="bodycopy block w-full pl-[0px] pr-[40px] text-left align-top !text-[var(--identity-color)]">
             Michael Wolever
           </span>
           <Link
@@ -138,7 +138,7 @@ export default function Nav({
         <>
           {/* Default: Michael Wolever + slide title + counter */}
           <div className="group-hover:hidden">
-            <span className="bodycopy block w-full pl-[0px] pr-[40px] text-left align-top text-[var(--identity-color)]">
+            <span className="bodycopy block w-full pl-[0px] pr-[40px] text-left align-top !text-[var(--identity-color)]">
               Michael Wolever
             </span>
             {currentSlideTitle != null && currentSlideTitle !== "" && (
@@ -154,7 +154,7 @@ export default function Nav({
           </div>
           {/* Hover: Michael Wolever + Projects + Information */}
           <div className="hidden group-hover:block">
-            <span className="bodycopy block w-full pl-[0px] pr-[40px] text-left align-top text-[var(--identity-color)]">
+            <span className="bodycopy block w-full pl-[0px] pr-[40px] text-left align-top !text-[var(--identity-color)]">
               Michael Wolever
             </span>
             <Link
@@ -173,7 +173,7 @@ export default function Nav({
         </>
       ) : (
         <>
-          <span className="bodycopy block w-full pl-[0px] text-left align-top text-[var(--identity-color)]">
+          <span className="bodycopy block w-full pl-[0px] text-left align-top !text-[var(--identity-color)]">
             Michael Wolever
           </span>
           {currentSlideTitle != null && currentSlideTitle !== "" && (

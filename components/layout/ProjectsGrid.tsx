@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from "react";
 import PortableText from "@/components/sanity/PortableText";
-import Slideshow from "@/components/slideshow/Slideshow";
 import type { SlideshowItem } from "@/components/slideshow/Slideshow";
 import { urlForImage } from "@/lib/image";
 import type { Project } from "@/lib/queries";
@@ -154,22 +153,7 @@ export default function ProjectsGrid({
 
   return (
     <>
-    <div className="grid w-full grid-cols-10 gap-[15px]">
-      {/* First two cells left empty */}
-      <div
-        className="relative aspect-[4/5] w-full overflow-hidden bg-[#ffffff] transition-opacity duration-200"
-        style={{ opacity: overlay ? 0.3 : 1 }}
-        aria-hidden
-      >
-        <div className="cell-content-fade-in h-full w-full" style={{ animationDelay: "0s" }} />
-      </div>
-      <div
-        className="relative aspect-[4/5] w-full overflow-hidden bg-[#ffffff] transition-opacity duration-200"
-        style={{ opacity: overlay ? 0.2 : 1 }}
-        aria-hidden
-      >
-        <div className="cell-content-fade-in h-full w-full" style={{ animationDelay: "0.03s" }} />
-      </div>
+    <div className="grid w-full grid-cols-5 gap-[15px]">
       {items.map(({ project, image, imageIndex, totalImages }, index) => {
         const isOverlayProjectCell =
           overlay != null && overlay.projectId === project._id;
@@ -177,15 +161,16 @@ export default function ProjectsGrid({
           isOverlayProjectCell && overlaySlideIndex === imageIndex;
         const showImage = visibleImages.has(index) || isOverlayProjectCell;
         const imageSource = image?.asset ? { asset: image.asset, alt: image.alt } : null;
-        const cellIndex = index + 2;
+        const cellIndex = index;
 
         const isOverlayProject = overlay?.projectId === project._id;
-        const cellOpacity = overlay == null ? 1 : isOverlayProject ? 1 : 0.2;
+        const cellOpacity = overlay == null ? 1 : isOverlayProject ? 1 : 0.05;
+        const cellGrayscale = overlay != null && !isOverlayProject;
 
         return (
           <div
             key={`${project._id}-${index}-${image?.asset?._ref ?? "n"}`}
-            className="relative aspect-[4/5] w-full overflow-hidden bg-[#ffffff] transition-opacity duration-200"
+            className={`relative aspect-[4/5] w-full overflow-hidden bg-[#ffffff] transition-[opacity,filter] duration-200 ${cellGrayscale ? "grayscale" : ""}`}
             style={{ opacity: cellOpacity }}
             onMouseEnter={() => toggleCell(index)}
             onClick={() => openProject(project._id, imageIndex, project, totalImages)}
@@ -249,7 +234,7 @@ export default function ProjectsGrid({
       })}
     </div>
 
-    {/* Overlay: project slideshow centered, same size as homepage, fade in */}
+    {/* Overlay: single-image viewer so wrapper width matches image; backdrop click closes */}
     {overlay && overlayItems.length > 0 && (
       <div
         className="projects-overlay-fade-in fixed inset-0 z-50 flex items-center justify-center opacity-0"
@@ -259,26 +244,51 @@ export default function ProjectsGrid({
         aria-label="Project slideshow"
       >
         <div
-          className="flex w-full max-w-[600px] flex-col items-center px-4"
+          className="relative flex max-h-[600px] flex-col items-center"
           onClick={(e) => e.stopPropagation()}
         >
-          <Slideshow
-            items={overlayItems}
-            className="w-full max-w-[600px]"
-            showPrevNext
-            initialSlideIndex={overlay.startIndex}
-            imageFit="contain"
-            onSlideChange={handleOverlaySlideChange}
-            onPrevClick={onOverlayPrevClick}
-            onNextClick={onOverlayNextClick}
-          />
-          <button
-            type="button"
-            onClick={closeOverlay}
-            className="bodycopy mt-4 text-white underline hover:no-underline"
-          >
-            Close
-          </button>
+          {/* Single image: natural width so wrapper shrinks to image; prev/next hit areas */}
+          <div className="relative flex max-h-[600px] items-center justify-center">
+            {overlayItems[overlaySlideIndex]?.image?.asset && (
+              <>
+                {/* Prev: left third of image */}
+                <button
+                  type="button"
+                  className="absolute left-0 top-0 z-10 h-full w-1/2 cursor-pointer border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const n = overlayItems.length;
+                    const next = (overlaySlideIndex - 1 + n) % n;
+                    handleOverlaySlideChange(next);
+                    onOverlayPrevClick?.();
+                  }}
+                  aria-label="Previous image"
+                />
+                <img
+                  src={urlForImage(overlayItems[overlaySlideIndex].image).width(1200).url()}
+                  alt={
+                    overlayItems[overlaySlideIndex].image?.alt ??
+                    overlayItems[overlaySlideIndex].title ??
+                    `Slide ${overlaySlideIndex + 1}`
+                  }
+                  className="max-h-[600px] w-auto object-contain"
+                />
+                {/* Next: right third of image */}
+                <button
+                  type="button"
+                  className="absolute right-0 top-0 z-10 h-full w-1/2 cursor-pointer border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const n = overlayItems.length;
+                    const next = (overlaySlideIndex + 1) % n;
+                    handleOverlaySlideChange(next);
+                    onOverlayNextClick?.();
+                  }}
+                  aria-label="Next image"
+                />
+              </>
+            )}
+          </div>
         </div>
       </div>
     )}

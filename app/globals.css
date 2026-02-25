@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --identity-color: #d307b8;
+    --identity-color: #d307aa;
   }
   body {
     font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -55,10 +55,11 @@ select:focus-visible,
 
 /* Body copy text style: Times New Roman, 17px, regular weight */
 .bodycopy {
-  font-family: "Times New Roman", Times, serif;
-  font-size: 13px;
-  font-weight: 300;
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
   line-height: 1.1;
+  color: #969696;
 }
 
 /* Nav background: visible 2s on load, then fade out 1s */
@@ -119,5 +120,5 @@ select:focus-visible,
 }
 
 .projects-overlay-fade-in {
-  animation: projects-overlay-fade-in 0.3s ease-out forwards;
+  animation: projects-overlay-fade-in 0s ease-out forwards;
 }

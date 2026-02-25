@@ -44,7 +44,7 @@ export default function ProjectsPageClient({ projects }: ProjectsPageClientProps
 
   return (
     <>
-      <div className="absolute left-[20px] top-[20px] z-10">
+      <div className="fixed left-[20px] top-[20px] z-10">
         {overlay ? (
           <Nav
             variant="hover"
