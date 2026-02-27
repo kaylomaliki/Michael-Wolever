@@ -6,10 +6,14 @@
 
 @layer base {
   :root {
-    --identity-color: #d307aa;
+    --identity-color: #767676;
+    --page-bg: #232323;
+    --page-text: #ffffff;
   }
   body {
     font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--page-bg);
+    color: var(--page-text);
   }
 }
 
@@ -53,28 +57,13 @@ select:focus-visible,
   outline-offset: 2px;
 }
 
-/* Body copy text style: Times New Roman, 17px, regular weight */
+/* Body copy text style: Oxanium from Google Fonts */
 .bodycopy {
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.1;
-  color: #969696;
-}
-
-/* Nav background: visible 2s on load, then fade out 1s */
-@keyframes nav-bg-load-fade {
-  0%,
-  66.67% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-.nav-bg-initial {
-  animation: nav-bg-load-fade 3s forwards;
+  font-family: var(--font-oxanium), "Oxanium", sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  line-height: 1.2;
+  color: var(--page-text);
 }
 
 /* Nav direction arrow: flash (appear then disappear) */
@@ -121,4 +110,32 @@ select:focus-visible,
 
 .projects-overlay-fade-in {
   animation: projects-overlay-fade-in 0s ease-out forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   Project grid: column count per breakpoint (edit --projects-grid-cols below)
+   ----------------------------------------------------------------------------- */
+:root {
+  --projects-grid-cols: 1; /* default: < 640px */
+}
+@media (min-width: 640px) {
+  :root {
+    --projects-grid-cols: 2;
+  }
+}
+@media (min-width: 768px) {
+  :root {
+    --projects-grid-cols: 4;
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --projects-grid-cols: 5;
+  }
+}
+.projects-grid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(var(--projects-grid-cols), 1fr);
+  gap: 15px;
 }

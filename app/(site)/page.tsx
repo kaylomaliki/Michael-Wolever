@@ -1,5 +1,5 @@
+import HomePageContent from "@/components/layout/HomePageContent";
 import { getHomepage } from "@/lib/queries";
-import HomePageContent from "./HomePageContent";
 
 /**
  * Homepage

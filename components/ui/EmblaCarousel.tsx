@@ -94,13 +94,13 @@ export function EmblaCarousel({
         <>
           <button
             type="button"
-            className="embla__prev absolute left-0 top-0 z-10 h-full w-1/2 cursor-pointer border-0 bg-transparent p-0 opacity-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
+            className="embla__prev absolute left-0 top-0 z-10 h-full w-1/2 cursor-w-resize border-0 bg-transparent p-0 opacity-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
             onClick={scrollPrev}
             aria-label="Previous slide"
           />
           <button
             type="button"
-            className="embla__next absolute right-0 top-0 z-10 h-full w-1/2 cursor-pointer border-0 bg-transparent p-0 opacity-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
+            className="embla__next absolute right-0 top-0 z-10 h-full w-1/2 cursor-e-resize border-0 bg-transparent p-0 opacity-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
             onClick={scrollNext}
             aria-label="Next slide"
           />

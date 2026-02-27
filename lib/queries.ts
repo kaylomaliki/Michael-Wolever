@@ -25,6 +25,28 @@ export interface HomepageSlideshowItem {
     asset?: { _ref: string; _type: "reference" };
     alt?: string;
   };
+  video?: {
+    _type?: "video";
+    videoType?: "mux" | "file";
+    muxPlaybackId?: string;
+    videoFile?: {
+      asset?: {
+        _ref?: string;
+        _type?: string;
+        url?: string;
+        originalFilename?: string;
+      };
+    };
+    poster?: {
+      asset?: { _ref?: string; _type?: string; _id?: string };
+      alt?: string;
+    };
+    alt?: string;
+    autoplay?: boolean;
+    loop?: boolean;
+    muted?: boolean;
+    controls?: boolean;
+  };
 }
 
 /** Homepage document: slideshow items only */
@@ -67,11 +89,37 @@ export interface Project {
   title?: PortableTextBlock[] | string;
   slug?: { current: string };
   order?: number;
-  slideshowImages?: Array<{
-    asset?: { _ref: string; _type?: string };
-    alt?: string;
-    startVisible?: boolean;
-  }>;
+  slideshowImages?: Array<
+    | {
+        _type?: "image";
+        asset?: { _ref: string; _type?: string };
+        alt?: string;
+        startVisible?: boolean;
+      }
+    | {
+        _type: "video";
+        videoType?: "mux" | "file";
+        muxPlaybackId?: string;
+        videoFile?: {
+          asset?: {
+            _ref?: string;
+            _type?: string;
+            url?: string;
+            originalFilename?: string;
+          };
+        };
+        poster?: {
+          asset?: { _ref?: string; _type?: string; _id?: string };
+          alt?: string;
+        };
+        alt?: string;
+        autoplay?: boolean;
+        loop?: boolean;
+        muted?: boolean;
+        controls?: boolean;
+        startVisible?: boolean;
+      }
+  >;
 }
 
 /**
@@ -108,6 +156,28 @@ export async function getHomepage(): Promise<Homepage | null> {
         image{
           asset,
           alt
+        },
+        video{
+          _type,
+          videoType,
+          muxPlaybackId,
+          videoFile{
+            asset->{
+              _ref,
+              _type,
+              url,
+              originalFilename
+            }
+          },
+          poster{
+            asset,
+            alt
+          },
+          alt,
+          autoplay,
+          loop,
+          muted,
+          controls
         }
       }
     }`;
@@ -129,9 +199,28 @@ export async function getProjects(): Promise<Project[]> {
       slug,
       order,
       slideshowImages[]{
+        _type,
         asset,
         alt,
-        startVisible
+        startVisible,
+        videoType,
+        muxPlaybackId,
+        videoFile{
+          asset->{
+            _ref,
+            _type,
+            url,
+            originalFilename
+          }
+        },
+        poster{
+          asset,
+          alt
+        },
+        autoplay,
+        loop,
+        muted,
+        controls
       }
     }`;
     return await sanityClient.fetch<Project[]>(query);
@@ -152,9 +241,28 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
       slug,
       order,
       slideshowImages[]{
+        _type,
         asset,
         alt,
-        startVisible
+        startVisible,
+        videoType,
+        muxPlaybackId,
+        videoFile{
+          asset->{
+            _ref,
+            _type,
+            url,
+            originalFilename
+          }
+        },
+        poster{
+          asset,
+          alt
+        },
+        autoplay,
+        loop,
+        muted,
+        controls
       }
     }`;
     return await sanityClient.fetch<Project | null>(query, { slug });

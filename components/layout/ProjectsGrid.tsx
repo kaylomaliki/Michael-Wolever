@@ -2,10 +2,26 @@
 
 import { useCallback, useMemo, useState } from "react";
 import PortableText from "@/components/sanity/PortableText";
-import type { SlideshowItem } from "@/components/slideshow/Slideshow";
-import { urlForImage } from "@/lib/image";
+import OptimizedMedia, { type MediaItem } from "@/components/images/OptimizedMedia";
+import MediaSlideshow, {
+  type MediaSlideshowItem,
+} from "@/components/slideshow/MediaSlideshow";
 import type { Project } from "@/lib/queries";
 import type { PortableTextBlock } from "@portabletext/types";
+
+/** Normalize a project slideshow item (image or video) to OptimizedMedia's MediaItem, or null */
+function toMediaItem(
+  item: NonNullable<Project["slideshowImages"]>[number] | null
+): MediaItem | null {
+  if (!item) return null;
+  if (item.asset) return item as MediaItem;
+  const v = item as { _type?: string; videoType?: string; videoFile?: { asset?: unknown } };
+  if (v.videoType === "mux" && (v as { muxPlaybackId?: string }).muxPlaybackId)
+    return { ...item, _type: "video" as const };
+  if (v.videoType === "file" && v.videoFile?.asset)
+    return { ...item, _type: "video" as const };
+  return null;
+}
 
 /** Plain text from project title (blocks or legacy string) for alt text etc. */
 function projectTitleToPlainText(title: Project["title"]): string {
@@ -73,12 +89,13 @@ function getInitialVisibleIndices(items: ProjectImage[]): Set<number> {
   return set;
 }
 
-/** Map a project's slideshow images to SlideshowItem[] */
-function projectToSlideshowItems(project: Project): SlideshowItem[] {
+/** Map a project's slideshow (images + videos) to MediaSlideshowItem[] for overlay */
+function projectToMediaSlideshowItems(project: Project | null): MediaSlideshowItem[] {
+  if (!project) return [];
   const titlePlain = projectTitleToPlainText(project.title);
   return (project.slideshowImages ?? []).map((img) => ({
-    title: img.alt ?? titlePlain,
-    image: img?.asset ? { asset: img.asset, alt: img.alt } : undefined,
+    media: toMediaItem(img),
+    alt: (img as { alt?: string }).alt ?? titlePlain ?? "",
   }));
 }
 
@@ -149,18 +166,18 @@ export default function ProjectsGrid({
 
   const overlayProject =
     overlay != null ? projects.find((p) => p._id === overlay.projectId) : null;
-  const overlayItems = overlayProject ? projectToSlideshowItems(overlayProject) : [];
+  const overlayMediaItems = projectToMediaSlideshowItems(overlayProject);
 
   return (
     <>
-    <div className="grid w-full grid-cols-5 gap-[15px]">
+    <div className="projects-grid">
       {items.map(({ project, image, imageIndex, totalImages }, index) => {
         const isOverlayProjectCell =
           overlay != null && overlay.projectId === project._id;
         const isCurrentOverlaySlide =
           isOverlayProjectCell && overlaySlideIndex === imageIndex;
         const showImage = visibleImages.has(index) || isOverlayProjectCell;
-        const imageSource = image?.asset ? { asset: image.asset, alt: image.alt } : null;
+        const media = toMediaItem(image);
         const cellIndex = index;
 
         const isOverlayProject = overlay?.projectId === project._id;
@@ -169,8 +186,8 @@ export default function ProjectsGrid({
 
         return (
           <div
-            key={`${project._id}-${index}-${image?.asset?._ref ?? "n"}`}
-            className={`relative aspect-[4/5] w-full overflow-hidden bg-[#ffffff] transition-[opacity,filter] duration-200 ${cellGrayscale ? "grayscale" : ""}`}
+            key={`${project._id}-${index}-${image?.asset?._ref ?? (image as { muxPlaybackId?: string })?.muxPlaybackId ?? "v"}`}
+            className={`relative aspect-[4/5] w-full overflow-hidden transition-[opacity,filter] duration-200 ${cellGrayscale ? "grayscale" : ""}`}
             style={{ opacity: cellOpacity }}
             onMouseEnter={() => toggleCell(index)}
             onClick={() => openProject(project._id, imageIndex, project, totalImages)}
@@ -184,10 +201,10 @@ export default function ProjectsGrid({
             }}
             aria-label={`View project ${projectTitleToPlainText(project.title) || "Untitled"}, image ${imageIndex + 1} of ${totalImages}`}
           >
-            {/* Active cell indicator: 2px bar on top, above image (no layout shift) */}
+            {/* Active cell indicator: 5px bar on top, above image (no layout shift) */}
             {isCurrentOverlaySlide && (
               <div
-                className="absolute left-0 right-0 top-0 z-20 h-[3px] bg-[var(--identity-color)]"
+                className="absolute left-0 right-0 top-0 z-20 h-[5px] bg-[var(--identity-color)]"
                 aria-hidden
               />
             )}
@@ -214,18 +231,29 @@ export default function ProjectsGrid({
                 {imageIndex + 1}/{totalImages}
               </span>
             </div>
-            {/* Image: visible when toggled on, full width and auto height from image aspect ratio */}
-            {imageSource && (
+            {/* Media: full width of cell, auto height (top-aligned; cell overflow clips if taller) */}
+            {media && (
               <div
-                className={`absolute inset-x-0 top-0 flex justify-center transition-opacity duration-150 ${
+                className={`absolute left-0 right-0 top-0 w-full transition-opacity duration-150 ${
                   showImage ? "opacity-100 z-10" : "opacity-0 z-0"
                 }`}
               >
-                <img
-                  src={urlForImage(imageSource).width(1200).url()}
-                  alt={image.alt ?? projectTitleToPlainText(project.title) ?? "Project image"}
-                  className="h-auto w-full max-w-full object-top"
-                />
+                <div className="relative w-full [&>div]:!h-auto [&>div]:!max-w-full [&>div]:!w-full">
+                  <OptimizedMedia
+                    media={media}
+                    alt={
+                      (image as { alt?: string }).alt ??
+                      projectTitleToPlainText(project.title) ??
+                      "Project media"
+                    }
+                    fill={false}
+                    width={800}
+                    height={600}
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                    className="object-top w-full h-auto"
+                    isInView={showImage}
+                  />
+                </div>
               </div>
             )}
             </div>
@@ -234,8 +262,8 @@ export default function ProjectsGrid({
       })}
     </div>
 
-    {/* Overlay: single-image viewer so wrapper width matches image; backdrop click closes */}
-    {overlay && overlayItems.length > 0 && (
+    {/* Overlay: MediaSlideshow (same as homepage) with backdrop click to close */}
+    {overlay && overlayMediaItems.length > 0 && (
       <div
         className="projects-overlay-fade-in fixed inset-0 z-50 flex items-center justify-center opacity-0"
         onClick={closeOverlay}
@@ -244,51 +272,32 @@ export default function ProjectsGrid({
         aria-label="Project slideshow"
       >
         <div
-          className="relative flex max-h-[600px] flex-col items-center"
+          className="flex flex-col items-center justify-center"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Single image: natural width so wrapper shrinks to image; prev/next hit areas */}
-          <div className="relative flex max-h-[600px] items-center justify-center">
-            {overlayItems[overlaySlideIndex]?.image?.asset && (
-              <>
-                {/* Prev: left third of image */}
-                <button
-                  type="button"
-                  className="absolute left-0 top-0 z-10 h-full w-1/2 cursor-pointer border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const n = overlayItems.length;
-                    const next = (overlaySlideIndex - 1 + n) % n;
-                    handleOverlaySlideChange(next);
-                    onOverlayPrevClick?.();
-                  }}
-                  aria-label="Previous image"
-                />
-                <img
-                  src={urlForImage(overlayItems[overlaySlideIndex].image).width(1200).url()}
-                  alt={
-                    overlayItems[overlaySlideIndex].image?.alt ??
-                    overlayItems[overlaySlideIndex].title ??
-                    `Slide ${overlaySlideIndex + 1}`
-                  }
-                  className="max-h-[600px] w-auto object-contain"
-                />
-                {/* Next: right third of image */}
-                <button
-                  type="button"
-                  className="absolute right-0 top-0 z-10 h-full w-1/2 cursor-pointer border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const n = overlayItems.length;
-                    const next = (overlaySlideIndex + 1) % n;
-                    handleOverlaySlideChange(next);
-                    onOverlayNextClick?.();
-                  }}
-                  aria-label="Next image"
-                />
-              </>
-            )}
-          </div>
+          <MediaSlideshow
+            items={overlayMediaItems}
+            currentIndex={overlaySlideIndex}
+            onPrev={() => {
+              const n = overlayMediaItems.length;
+              const next = (overlaySlideIndex - 1 + n) % n;
+              handleOverlaySlideChange(next);
+              onOverlayPrevClick?.();
+            }}
+            onNext={() => {
+              const n = overlayMediaItems.length;
+              const next = (overlaySlideIndex + 1) % n;
+              handleOverlaySlideChange(next);
+              onOverlayNextClick?.();
+            }}
+            maxHeightClassName="max-h-[600px]"
+            width={800}
+            stopPropagationOnClick
+            mediaProps={{
+              sizes: "(max-width: 768px) 100vw, 800px",
+              objectFit: "contain",
+            }}
+          />
         </div>
       </div>
     )}
